@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Registration</title>
+</head>
+<body>
+
+<!-- PAGE TITLE -->
+<h2>Registration</h2>
+
+<!-- REGISTRATION FORM -->
+<form th:action="@{/register}" method="POST" th:object="${createPersonRequest}">
+
+    <div th:if="${errorMessage} != null ">
+        <p style="color: red" th:text="${errorMessage}">
+        </p>
+
+    </div>
+
+    <label>I am:</label>
+    <select name="type" th:field="*{type}">
+        <option value="USER">User</option>
+        <option value="TRAINER">Trainer</option>
+    </select>
+    <br/>
+
+    <label>First Name</label>
+    <input  th:field="*{firstName}" />
+    <br/>
+
+    <label>Last Name</label>
+    <input  th:field="*{lastName}" />
+    <br/>
+
+    <label>Email Address</label>
+    <input   th:field="*{emailAddress}" />
+    <br/>
+
+    <label>Mobile Phone Number</label>
+    <input  th:field="*{mobilePhoneNumber}" />
+    <br/>
+
+    <label>Specialisation</label>
+    <input th:field="*{trainingType}" />
+    <br/>
+
+    <label>Training Area</label>
+    <input  th:field="*{trainArea}" />
+    <br/>
+
+    <label>Password</label>
+    <input  th:field="*{rawPassword}" />
+    <br/>
+
+    <button type="submit">Submit</button>
+</form>
+
+
+</body>
+</html>

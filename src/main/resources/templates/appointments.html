@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="base :: content">
+
+<section>
+    <h2>My Appointments</h2>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Trainer</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="a : ${appointments}">
+            <td th:text="${a.id()}"></td>
+            <td th:text="${a.status()}"></td>
+            <td th:text="${a.trainer().fullName()}"></td>
+            <td>
+                <a th:href="@{/appointments/{id}(id=${a.id()})}">View</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="base :: content">
+
+<section>
+    <h2>My Profile</h2>
+
+    <p><strong>Email:</strong> <span th:text="${user.emailAddress}"></span></p>
+    <p><strong>Name:</strong>
+        <span th:text="${user.firstName}"></span>
+        <span th:text="${user.lastName}"></span>
+    </p>
+    <p><strong>Role:</strong> <span th:text="${user.type}"></span></p>
+</section>
+
+</html>

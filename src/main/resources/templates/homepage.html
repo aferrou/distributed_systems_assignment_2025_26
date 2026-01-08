@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="base :: content">
+
+<section>
+    <h2>Welcome to FitTrack</h2>
+
+    <p>
+        FitTrack helps users schedule training appointments
+        and trainers manage them efficiently.
+    </p>
+
+    <div th:if="${#authorization.expression('!isAuthenticated()')}">
+        <a class="button" th:href="@{/login}">Login</a>
+        <a class="button" th:href="@{/register}">Register</a>
+    </div>
+</section>
+
+</html>

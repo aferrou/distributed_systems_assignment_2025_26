@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="base :: content">
+
+<section>
+    <h2>Appointment Details</h2>
+
+    <p><strong>Subject:</strong> <span th:text="${appointment.subject()}"></span></p>
+    <p><strong>Status:</strong> <span th:text="${appointment.status()}"></span></p>
+
+    <p><strong>User Notes:</strong></p>
+    <p th:text="${appointment.userContent()}"></p>
+
+    <!-- TRAINER confirms -->
+    <form th:if="${#authorization.expression('hasRole(''TRAINER'')')
+                  and appointment.status().name() == 'REQUESTED'}"
+          th:action="@{/appointments/{id}/confirm(id=${appointment.id()})}"
+          method="post">
+        <button type="submit">Confirm</button>
+    </form>
+
+    <!-- TRAINER completes -->
+    <form th:if="${#authorization.expression('hasRole(''TRAINER'')')
+                  and appointment.status().name() == 'CONFIRMED'}"
+          th:action="@{/appointments/{id}/complete(id=${appointment.id()})}"
+          method="post">
+
+        <textarea name="teacherContent" required></textarea>
+        <button type="submit">Complete</button>
+    </form>
+</section>
+
+</html>

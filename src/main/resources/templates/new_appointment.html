@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="base :: content">
+
+<section>
+    <h2>Request Appointment</h2>
+
+    <form th:action="@{/appointments/new}" th:object="${form}" method="post">
+
+        <label>Trainer ID</label>
+        <input type="number" th:field="*{trainer.trainerId}" required>
+
+        <label>Subject</label>
+        <input type="text" th:field="*{appointment.trainingType}" required>
+
+        <label>Your message</label>
+        <textarea th:field="*{user.userNotes}" required></textarea>
+
+        <button type="submit">Submit</button>
+    </form>
+</section>
+
+</html>
