@@ -15,6 +15,7 @@ public record CreatePersonRequest(
         @NotNull @NotBlank @Size(max = 100) String firstName,
         @NotNull @NotBlank @Size(max = 100) String lastName,
         @NotNull @NotBlank @Size(max = 100) @Email String emailAddress,
-        @NotNull @NotBlank @Size(max = 18) String mobilePhoneNumber,
-        @NotNull @NotBlank @Size(min = 4, max = 24) String rawPassword
+        @NotNull @NotBlank @Size(min = 4, max = 24) String rawPassword,
+        @Size(max = 200) String specialisation,
+        @Size(max = 200) String trainArea
 ) {}

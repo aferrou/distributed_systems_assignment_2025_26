@@ -15,15 +15,15 @@ public class PersonMapper {
         if (person == null) {
             return null;
         }
-        final PersonView personView = new PersonView(
+        return new PersonView(
                 person.getId(),
                 person.getUsername(),
                 person.getFirstName(),
                 person.getLastName(),
-                person.getMobilePhoneNumber(),
                 person.getEmailAddress(),
-                person.getType()
+                person.getType(),
+                person.getSpecialisation(),
+                person.getTrainArea()
         );
-        return personView;
     }
 }

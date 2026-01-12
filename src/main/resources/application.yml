@@ -1,12 +1,13 @@
+# application.yml (or application-dev.yml if you use profiles)
 spring:
   application:
     name: FitTrack
 
   datasource:
-      url: jdbc:h2:file:./LOCAL_DATA/h2/app;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
-      username: sa
-      password: changeme
-      driver-class-name: org.h2.Driver
+    url: jdbc:h2:file:./LOCAL_DATA/h2/app;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: changeme
+    driver-class-name: org.h2.Driver
 
   jpa:
     hibernate:
@@ -33,7 +34,16 @@ springdoc:
 # Custom Application Properties.
 app:
   jwt:
-    issuer: "fittrack"
+    issuer: "fittrack-api"
     audience: "external-systems"
     secret: "${JWT_SECRET:Uh0WvRj5qs2sChP0dwTkky/VoudWSk0FVikEDDUKdRU=}" # openssl rand -base64 32
     ttl-minutes: 60
+
+# FitTrack Integration Service Configuration
+# ΣΗΜΑΝΤΙΚΟ: Για να δουλέψει το Weather API, πρέπει να τρέχει το integration-service στο port 8081
+# Τρέξτε πρώτα: cd integration-service && mvn spring-boot:run (σε ξεχωριστό terminal)
+# Μετά αλλάξτε το weather-service-enabled σε true
+fittrack:
+  integration:
+    weather-service-url: "${WEATHER_SERVICE_URL:http://localhost:8081}"
+    weather-service-enabled: "${WEATHER_SERVICE_ENABLED:true}"

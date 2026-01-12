@@ -4,7 +4,7 @@ import gr.hua.dit.fittrack.core.model.Appointment;
 import gr.hua.dit.fittrack.core.security.CurrentUser;
 import gr.hua.dit.fittrack.core.service.model.CompleteAppointmentRequest;
 import gr.hua.dit.fittrack.core.service.model.CreateAppointmentRequest;
-import gr.hua.dit.fittrack.core.service.model.StartAppointmentRequest;
+import gr.hua.dit.fittrack.core.service.model.ConfirmAppointmentRequest;
 import gr.hua.dit.fittrack.core.service.model.AppointmentView;
 
 import java.util.List;
@@ -21,13 +21,14 @@ public interface AppointmentBusinessLogicService {
 
     List<AppointmentView> getAppointments();
 
-    AppointmentView createAppointment(final CreateAppointmentRequest createAppointmentRequest, final boolean notify);
+    AppointmentView requestAppointment(final CreateAppointmentRequest createAppointmentRequest, final boolean notify);
 
-    default AppointmentView createAppointment(final CreateAppointmentRequest createAppointmentRequest) {
-        return this.createAppointment(createAppointmentRequest, true);
+    default AppointmentView requestAppointment(final CreateAppointmentRequest createAppointmentRequest) {
+        return this.requestAppointment(createAppointmentRequest, true);
     }
 
-    AppointmentView startAppointment(final StartAppointmentRequest startAppointmentRequest);
+    AppointmentView confirmAppointment(final ConfirmAppointmentRequest confirmAppointmentRequest);
 
     AppointmentView completeAppointment(final CompleteAppointmentRequest completeAppointmentRequest);
+
 }

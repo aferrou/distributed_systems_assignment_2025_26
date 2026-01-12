@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/client-tokens").permitAll()
+                        .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/**").authenticated()
                 )
                 .exceptionHandling(exh -> exh
@@ -58,27 +59,28 @@ public class SecurityConfig {
      */
     @Bean
     @Order(2)
-    public SecurityFilterChain uiChain(final HttpSecurity http) throws Exception {
+    public SecurityFilterChain uiChain(final HttpSecurity http,
+                                       final CustomAuthenticationSuccessHandler successHandler) throws Exception {
         http
                 .securityMatcher("/**")
                 // Το αφήνουμε ως σχόλιο προσωρινά... TODO configure.
                 // .csrf(csrf -> csrf.ignoringRequestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-                        .requestMatchers("/", "/login", "/register").permitAll() // Public
-                        .requestMatchers("/profile", "/logout").authenticated() // Private
+                        .requestMatchers("/", "/login", "/register", "/guest").permitAll() // Public
+                        .requestMatchers("/profile", "/profile/**", "/trainer", "/trainer/**", "/availability", "/availability/**", "/logout").authenticated() // Private
                         .anyRequest().permitAll() // the rest
                 )
                 .formLogin(form -> form
                         .loginPage("/login") // custom login page (see login.html)
                         .loginProcessingUrl("/login") // POST request target (handled by Spring Security)
-                        .defaultSuccessUrl("/profile", true)
+                        .successHandler(successHandler) // Custom redirect based on user type
                         .failureUrl("/login?error")
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout") // POST request target (handled by Spring Security)
-                        .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessUrl("/") // Redirect to homepage after logout
                         .deleteCookies("JSESSIONID")
                         .invalidateHttpSession(true)
                         .permitAll()

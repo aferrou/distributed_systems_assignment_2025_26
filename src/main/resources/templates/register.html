@@ -1,87 +1,79 @@
 <!DOCTYPE html>
-<html
-        lang="en"
-        xmlns:th="https://www.thymeleaf.org"
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        layout:decorate="~{base}">
-
+<html xmlns:th="http://www.thymeleaf.org" lang="el" dir="ltr">
 <head>
-    <title>Registration</title>
+    <meta charset="UTF-8" />
+    <title>FitTrack - Εγγραφή</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+        }
+        .register-container {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+    </style>
 </head>
-
 <body>
+<div class="register-container">
+    <h2 class="text-center mb-4">Εγγραφή</h2>
 
-<header layout:fragment="header">
-    <h1>FitTrack <small>/ Registration</small></h1>
-</header>
-
-<section layout:fragment="main">
-
-    <!-- REGISTRATION FORM -->
-    <form th:action="@{/register}" method="post" th:object="${createPersonRequest}">
-
-        <!-- ERROR MESSAGE -->
-        <div class="text-center mb-3" th:if="${errorMessage != null}">
-            <p class="text-danger m-0 p-0" th:text="${errorMessage}"></p>
-        </div>
+    <form th:action="@{/register}" method="POST" th:object="${createPersonRequest}">
+        <div th:if="${errorMessage != null}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
         <div class="mb-3">
-            <label class="form-label">I am:</label>
-            <select name="type" th:field="*{type}" class="form-select">
-                <option value="TRAINER">Trainer</option>
-                <option value="USER">User</option>
+            <label class="form-label" for="type">Εγγραφή ως:</label>
+            <select class="form-select" id="type" th:field="*{type}" required>
+                <option value="USER">Χρήστης</option>
+                <option value="TRAINER">Προπονητής</option>
             </select>
-            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('type')}" th:errors="*{type}"></div>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" name="username" th:field="*{username}" class="form-control" placeholder="Username should not contain spaces" required />
-            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+            <label class="form-label" for="username">Username</label>
+            <input type="text" class="form-control" id="username" th:field="*{username}" required />
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label" for="firstName">Όνομα</label>
+                <input type="text" class="form-control" id="firstName" th:field="*{firstName}" required />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label" for="lastName">Επώνυμο</label>
+                <input type="text" class="form-control" id="lastName" th:field="*{lastName}" required />
+            </div>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">First Name</label>
-            <input type="text" name="firstName" th:field="*{firstName}" class="form-control" required />
-            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
+            <label class="form-label" for="emailAddress">Email</label>
+            <input type="email" class="form-control" id="emailAddress" th:field="*{emailAddress}" required />
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Last Name</label>
-            <input type="text" name="lastName" th:field="*{lastName}" class="form-control" required />
-            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
+            <label class="form-label" for="rawPassword">Κωδικός</label>
+            <input type="password" class="form-control" id="rawPassword" th:field="*{rawPassword}" required />
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Email Address</label>
-            <input type="email" name="emailAddress" th:field="*{emailAddress}" class="form-control" required />
-            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('emailAddress')}" th:errors="*{emailAddress}"></div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Mobile Phone Number</label>
-            <input type="tel" name="mobilePhoneNumber" th:field="*{mobilePhoneNumber}" class="form-control" required />
-            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('mobilePhoneNumber')}" th:errors="*{mobilePhoneNumber}"></div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Password</label>
-            <input type="password" name="rawPassword" th:field="*{rawPassword}" class="form-control" required />
-            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('rawPassword')}" th:errors="*{rawPassword}"></div>
-        </div>
-
-        <div class="mb-4">
-            <button type="submit" class="btn btn-primary">Register</button>
-        </div>
-
-        <!-- USEFUL LINKS -->
-        <p class="m-0 p-0">
-            <a th:href="@{/login}">Already have an account? Log in</a>
-        </p>
-
+        <button type="submit" class="btn btn-dark w-100">Εγγραφή</button>
     </form>
 
-</section>
-
+    <div class="text-center mt-3">
+        <a href="/login" class="text-dark">Έχετε λογαριασμό; Συνδεθείτε</a>
+    </div>
+    <div class="text-center mt-2">
+        <a href="/" class="text-secondary">Αρχική</a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

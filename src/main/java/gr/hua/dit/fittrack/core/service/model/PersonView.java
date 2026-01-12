@@ -10,13 +10,14 @@ import gr.hua.dit.fittrack.core.service.PersonBusinessLogicService;
  * @see PersonBusinessLogicService
  */
 public record PersonView(
-        long id,
+        Long id,
         String username,
         String firstName,
         String lastName,
-        String mobilePhoneNumber,
         String emailAddress,
-        PersonType type
+        PersonType type,
+        String specialisation,
+        String trainArea
 ) {
 
     public String fullName() {

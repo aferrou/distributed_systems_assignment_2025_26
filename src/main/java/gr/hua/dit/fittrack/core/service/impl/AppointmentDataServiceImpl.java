@@ -20,9 +20,10 @@ public class AppointmentDataServiceImpl implements AppointmentDataService {
     private final AppointmentMapper appointmentMapper;
 
     public AppointmentDataServiceImpl(final AppointmentRepository appointmentRepository,
-                                 final AppointmentMapper appointmentMapper) {
+                                      final AppointmentMapper appointmentMapper) {
         if (appointmentRepository == null) throw new NullPointerException();
         if (appointmentMapper == null) throw new NullPointerException();
+
         this.appointmentRepository = appointmentRepository;
         this.appointmentMapper = appointmentMapper;
     }
@@ -30,10 +31,9 @@ public class AppointmentDataServiceImpl implements AppointmentDataService {
     @Override
     public List<AppointmentView> getAllAppointments() {
         final List<Appointment> appointmentList = this.appointmentRepository.findAll();
-        final List<AppointmentView> appointmentViewList = appointmentList
+        return appointmentList
                 .stream()
                 .map(this.appointmentMapper::convertAppointmentToAppointmentView)
                 .toList();
-        return appointmentViewList;
     }
 }

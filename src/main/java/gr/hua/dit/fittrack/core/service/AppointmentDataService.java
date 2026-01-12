@@ -5,8 +5,13 @@ import gr.hua.dit.fittrack.core.service.model.AppointmentView;
 import java.util.List;
 
 /**
- * Service for managing {@code Ticket} for data analytics purposes.
+ * Data service for appointment-related operations.
  */
 public interface AppointmentDataService {
+    /**
+     * Retrieves all appointments from the database.
+     *
+     * @return list of all appointments
+     */
     List<AppointmentView> getAllAppointments();
 }

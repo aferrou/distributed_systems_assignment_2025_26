@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" lang="el" dir="ltr">
+<head>
+    <meta charset="UTF-8" />
+    <title>FitTrack - Επισκέπτης</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #212529;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .trainer-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: white;
+        }
+
+        .trainer-card:hover {
+            border-color: #212529;
+        }
+
+        .trainer-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #212529;
+            margin-bottom: 5px;
+        }
+
+        .trainer-specialty {
+            color: #495057;
+            font-size: 0.95rem;
+        }
+
+        .trainer-area {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+<!-- Home Button -->
+<a href="/" class="btn btn-outline-dark home-btn">Αρχική</a>
+
+<div class="content-container">
+    <!-- Trainers Section -->
+    <div class="section-card">
+        <h2 class="section-title">Διαθέσιμοι Προπονητές</h2>
+
+        <div class="row">
+            <div class="col-md-6" th:each="trainer : ${trainers}">
+                <div class="trainer-card">
+                    <div class="trainer-name" th:text="${trainer.firstName + ' ' + trainer.lastName}">Όνομα</div>
+                    <div class="trainer-specialty" th:text="${trainer.specialisation}" th:if="${trainer.specialisation != null}">Ειδικότητα</div>
+                    <div class="trainer-area" th:text="${trainer.trainArea}" th:if="${trainer.trainArea != null}">Περιοχή</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="alert alert-secondary" th:if="${#lists.isEmpty(trainers)}">
+            Δεν υπάρχουν διαθέσιμοι προπονητές αυτή τη στιγμή.
+        </div>
+    </div>
+
+    <!-- Registration CTA Section -->
+    <div class="section-card text-center">
+        <h2 class="section-title">Εγγραφή</h2>
+        <p class="mb-4">Κάντε εγγραφή για να κλείσετε ραντεβού με προπονητή.</p>
+        <a href="/register" class="btn btn-dark btn-lg">Εγγραφή</a>
+        <a href="/login" class="btn btn-outline-dark btn-lg ms-2">Σύνδεση</a>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

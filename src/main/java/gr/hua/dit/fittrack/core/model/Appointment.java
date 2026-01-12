@@ -13,7 +13,6 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -34,8 +33,8 @@ import java.time.Instant;
                 @Index(name = "idx_appointment_scheduled_at", columnList = "scheduled_at")
         }
 )
+public final class Appointment {
 
-public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id")
@@ -57,9 +56,7 @@ public class Appointment {
     private AppointmentStatus status;
 
     @NotNull
-    @NotBlank
-    @Size(max = 255)
-    @Column(name = "training-type", length = 255)
+    @Column(name = "training_type", nullable = false)
     private TrainingType trainingType;
 
     /**
@@ -84,20 +81,14 @@ public class Appointment {
     private String trainerNotes;
 
     @CreationTimestamp
-    @Column(name = "requested_at", nullable = false, updatable = false)
-    private Instant requestedAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     @Column(name = "confirmed_at")
     private Instant confirmedAt;
 
-    @Column(name = "in_progress_at")
-    private Instant inProgressAt;
-
     @Column(name = "completed_at")
     private Instant completedAt;
-
-//    @Column(name = "cancelled_at")
-//    private Instant cancelledAt;
 
     /**
      * Coordinates for outdoor training location.
@@ -120,9 +111,8 @@ public class Appointment {
                        Instant scheduledAt,
                        String userNotes,
                        String trainerNotes,
-                       Instant requestedAt,
+                       Instant createdAt,
                        Instant confirmedAt,
-                       Instant inProgressAt,
                        Instant completedAt) {
         this.id = id;
         this.user = user;
@@ -132,9 +122,8 @@ public class Appointment {
         this.scheduledAt = scheduledAt;
         this.userNotes = userNotes;
         this.trainerNotes = trainerNotes;
-        this.requestedAt = requestedAt;
+        this.createdAt = createdAt;
         this.confirmedAt = confirmedAt;
-        this.inProgressAt = inProgressAt;
         this.completedAt = completedAt;
     }
 
@@ -202,12 +191,12 @@ public class Appointment {
         this.trainerNotes = trainerNotes;
     }
 
-    public Instant getRequestedAt() {
-        return requestedAt;
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
-    public void setRequestedAt(Instant requestedAt) {
-        this.requestedAt = requestedAt;
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Instant getConfirmedAt() {
@@ -218,14 +207,6 @@ public class Appointment {
         this.confirmedAt = confirmedAt;
     }
 
-    public Instant getInProgressAt() {
-        return inProgressAt;
-    }
-
-    public void setInProgressAt(Instant inProgressAt) {
-        this.inProgressAt = inProgressAt;
-    }
-
     public Instant getCompletedAt() {
         return completedAt;
     }
@@ -234,21 +215,11 @@ public class Appointment {
         this.completedAt = completedAt;
     }
 
-    public Double getLatitude() {
-        return latitude;
-    }
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
     @Override
     public String toString() {
@@ -257,15 +228,7 @@ public class Appointment {
                 ", user=" + user +
                 ", trainer=" + trainer +
                 ", status=" + status +
-                ", trainingType='" + trainingType + '\'' +
                 ", scheduledAt=" + scheduledAt +
-                ", userNotes='" + userNotes + '\'' +
-                ", trainerNotes='" + trainerNotes + '\'' +
-                ", requestedAt=" + requestedAt +
-                ", confirmedAt=" + confirmedAt +
-                ", completedAt=" + completedAt +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
                 '}';
     }
 }

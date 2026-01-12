@@ -8,8 +8,8 @@ import gr.hua.dit.fittrack.core.service.impl.PersonBusinessLogicServiceImpl;
  * @see PersonBusinessLogicServiceImpl#createPerson(CreatePersonRequest)
  */
 public record CreatePersonResult(
-        boolean created,
-        String reason,
+        boolean success,
+        String errorMessage,
         PersonView personView
 ) {
 

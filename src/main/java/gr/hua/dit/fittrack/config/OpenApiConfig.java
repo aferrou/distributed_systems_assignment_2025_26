@@ -22,9 +22,9 @@ public class OpenApiConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Office Hours API")
+                        .title("FitTrack API")
                         .version("v1")
-                        .description("Stateless API for data analytics purposes")
+                        .description("Stateless API for data analytics purposes for the FitTrack platform")
                 )
                 .components(new Components()
                         .addSecuritySchemes("BearerAuth", new SecurityScheme()
@@ -40,7 +40,7 @@ public class OpenApiConfig {
     public GroupedOpenApi groupedOpenApi() {
         return GroupedOpenApi.builder()
                 .group("api")
-                .packagesToScan("gr.hua.dit.officehours.web.rest")
+                .packagesToScan("gr.hua.dit.fittrack.web.rest")
                 .pathsToMatch("/api/v1/**")
                 .build();
     }

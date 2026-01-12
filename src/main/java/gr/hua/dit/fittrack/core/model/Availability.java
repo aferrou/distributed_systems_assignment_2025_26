@@ -1,7 +1,6 @@
 package gr.hua.dit.fittrack.core.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -9,16 +8,15 @@ import java.time.OffsetDateTime;
 public class Availability {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "start_time", nullable = false)
     private OffsetDateTime startTime;
 
     @Column(name = "end_time", nullable = false)
-    private  OffsetDateTime  endTime;
+    private OffsetDateTime endTime;
 
-    // Σχέση Many-to-One με Person (Trainer)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trainer_id", nullable = false)
     private Person trainer;
@@ -31,16 +29,35 @@ public class Availability {
         this.trainer = trainer;
     }
 
-    // getters & setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public OffsetDateTime getStartTime() { return startTime; }
-    public void setStartTime(OffsetDateTime startTime) { this.startTime = startTime; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public OffsetDateTime getEndTime() { return endTime; }
-    public void setEndTime(OffsetDateTime endTime) { this.endTime = endTime; }
+    public OffsetDateTime getStartTime() {
+        return startTime;
+    }
 
-    public Person getTrainer() { return trainer; }
-    public void setTrainer(Person trainer) { this.trainer = trainer; }
+    public void setStartTime(OffsetDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public OffsetDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(OffsetDateTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public Person getTrainer() {
+        return trainer;
+    }
+
+    public void setTrainer(Person trainer) {
+        this.trainer = trainer;
+    }
 }

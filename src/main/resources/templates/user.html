@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard - FitTrack</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">FitTrack</a>
+        <form th:action="@{/logout}" method="POST">
+            <button type="submit" class="btn btn-outline-light btn-sm">Αποσύνδεση</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h4 class="mb-4">User Dashboard</h4>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Τα Ραντεβού μου</h5>
+                    <p class="card-text">Δείτε και διαχειριστείτε τα ραντεβού σας.</p>
+                    <a href="/appointments" class="btn btn-dark">Ραντεβού</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Νέο Ραντεβού</h5>
+                    <p class="card-text">Κλείστε ραντεβού με προπονητή.</p>
+                    <a href="/appointments/new" class="btn btn-dark">Κλείσιμο</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Προφίλ</h5>
+                    <p class="card-text">Δείτε τα στοιχεία του λογαριασμού σας.</p>
+                    <a href="/profile" class="btn btn-dark">Προφίλ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

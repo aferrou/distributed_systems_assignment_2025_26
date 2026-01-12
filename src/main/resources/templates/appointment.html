@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Appointment Details - FitTrack</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main>
+    <section>
+        <h2>Appointment Details</h2>
+
+        <div class="card" th:if="${appointment != null}">
+            <h3>Appointment #<span th:text="${appointment.id}"></span></h3>
+            <p><strong>Date & Time:</strong> <span th:text="${appointment.scheduledAt}"></span></p>
+            <p><strong>Status:</strong> <span class="badge" th:text="${appointment.status}"></span></p>
+            <p><strong>Training Type:</strong> <span th:text="${appointment.trainingType}"></span></p>
+            <p th:if="${appointment.userNotes != null and !appointment.userNotes.empty}">
+                <strong>User Notes:</strong> <span th:text="${appointment.userNotes}"></span>
+            </p>
+            <p th:if="${appointment.trainerNotes != null and !appointment.trainerNotes.empty}">
+                <strong>Trainer Notes:</strong> <span th:text="${appointment.trainerNotes}"></span>
+            </p>
+        </div>
+
+        <div th:if="${#authorization.expression('hasRole(''TRAINER'')') and appointment.status == 'PENDING'}">
+            <form th:action="@{/appointments/{id}/confirm(id=${appointment.id})}" method="POST">
+                <button type="submit" class="button">Confirm Appointment</button>
+            </form>
+        </div>
+
+        <div th:if="${#authorization.expression('hasRole(''TRAINER'')') and appointment.status == 'CONFIRMED'}">
+            <form th:action="@{/appointments/{id}/complete(id=${appointment.id})}"
+                  method="POST"
+                  th:object="${completeForm}">
+                <label for="trainerNotes">Training Notes:</label>
+                <textarea id="trainerNotes"
+                          th:field="*{trainerNotes}"
+                          rows="5"
+                          placeholder="Add training notes..."></textarea>
+                <button type="submit" class="button">Complete Appointment</button>
+            </form>
+        </div>
+
+        <a th:href="@{/appointments}" class="button secondary">Back to Appointments</a>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>
