@@ -2,9 +2,10 @@ package gr.hua.dit.fittrack.core.service;
 
 import gr.hua.dit.fittrack.core.model.Appointment;
 import gr.hua.dit.fittrack.core.model.AppointmentStatus;
-import gr.hua.dit.fittrack.core.port.SmsNotificationPort;
 import gr.hua.dit.fittrack.core.repository.AppointmentRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,26 +19,24 @@ import java.util.List;
 @Service
 public class AppointmentReminderService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentReminderService.class);
+
     private final AppointmentRepository appointmentRepository;
-    private final SmsNotificationPort smsNotificationPort;
 
-    public AppointmentReminderService(final AppointmentRepository appointmentRepository,
-                                 final SmsNotificationPort smsNotificationPort) {
+    public AppointmentReminderService(final AppointmentRepository appointmentRepository) {
         if (appointmentRepository == null) throw new NullPointerException();
-        if (smsNotificationPort == null) throw new NullPointerException();
-
         this.appointmentRepository = appointmentRepository;
-        this.smsNotificationPort = smsNotificationPort;
     }
 
     @Scheduled(cron = "0 0 9 * * *")
-    public void remindTrainerOfStaleRequestedAppointments() {
-        Instant cutoff = Instant.now().minus(1, ChronoUnit.DAYS);
-        final List<Appointment> appointmentList = this.appointmentRepository.findByStatusAndRequestedAtBefore(AppointmentStatus.REQUESTED, cutoff);
-        for (final Appointment appointment : appointmentList) {
-            final String e164 = appointment.getTrainer().getMobilePhoneNumber();
-            final String content = String.format("Reminder: Appointment %s REQUESTED", appointment.getId());
-            this.smsNotificationPort.sendSms(e164, content);
+    public void remindTrainersOfStaleRequestedAppointments() {
+        final Instant cutoff = Instant.now().minus(1, ChronoUnit.DAYS);
+        final List<Appointment> staleAppointments = this.appointmentRepository.findByStatusAndCreatedAtBefore(AppointmentStatus.REQUESTED, cutoff);
+        for (final Appointment appointment : staleAppointments) {
+            // Log reminder instead of sending SMS
+            LOGGER.info("Reminder: Appointment {} is still awaiting confirmation from trainer {}",
+                    appointment.getId(),
+                    appointment.getTrainer().getEmailAddress());
         }
     }
 }

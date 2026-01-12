@@ -4,7 +4,6 @@ import gr.hua.dit.fittrack.core.model.Availability;
 import gr.hua.dit.fittrack.core.model.Person;
 import gr.hua.dit.fittrack.core.service.model.AvailabilityRequest;
 import gr.hua.dit.fittrack.core.service.model.AvailabilityResponse;
-import jdk.jfr.Category;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,13 +20,7 @@ public class AvailabilityMapper {
         );
     }
 
-    // -------------------------------
-    // Request DTO → Entity
-    // -------------------------------
-    public Availability toEntity(
-            AvailabilityRequest dto,
-            Person trainer
-    ) {
+    public Availability toEntity(AvailabilityRequest dto, Person trainer) {
         if (dto == null || trainer == null) {
             return null;
         }

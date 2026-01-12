@@ -15,6 +15,6 @@ public class HomepageController {
         if (AuthUtils.isAuthenticated(authentication)) {
             return "redirect:/profile";
         }
-        return "homepage";
+        return "index";  // Changed to use new index.html
     }
 }

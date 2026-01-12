@@ -13,4 +13,13 @@ public interface PersonBusinessLogicService {
     default CreatePersonResult createPerson(final CreatePersonRequest createPersonRequest) {
         return this.createPerson(createPersonRequest, true);
     }
+
+    /**
+     * Creates a trainer account. Only accessible by admins.
+     *
+     * @param createPersonRequest the trainer details
+     * @param notify whether to send SMS notification
+     * @return result of the creation
+     */
+    CreatePersonResult createTrainer(CreatePersonRequest createPersonRequest, boolean notify);
 }

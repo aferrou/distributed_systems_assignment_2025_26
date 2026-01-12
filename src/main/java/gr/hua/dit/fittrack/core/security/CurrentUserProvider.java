@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 /**
- * Component for providing the current user.
+ * Component for providing access to the current user.
  *
  * @see CurrentUser
  */
@@ -18,31 +18,33 @@ public final class CurrentUserProvider {
 
     public Optional<CurrentUser> getCurrentUser() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.empty();
         }
         if (authentication.getPrincipal() instanceof ApplicationUserDetails userDetails) {
-            return Optional.of(new CurrentUser(userDetails.personId(), userDetails.getUsername(), userDetails.type()));
+            return Optional.of(new CurrentUser(userDetails.getPersonId(), userDetails.getUsername(), userDetails.getPersonType()));
         }
         return Optional.empty();
     }
 
     public CurrentUser requireCurrentUser() {
-        return this.getCurrentUser().orElseThrow(() -> new SecurityException("not authenticated"));
+        return getCurrentUser()
+                .orElseThrow(() -> new SecurityException("User is not authenticated"));
     }
 
-    /*
-    Person types
-     */
     public long requireUserId() {
-        final var currentUser = this.requireCurrentUser();
-        if (currentUser.type() != PersonType.USER) throw new SecurityException("User type/role required");
+        final CurrentUser currentUser = requireCurrentUser();
+        if (currentUser.type() != PersonType.USER) {
+            throw new SecurityException("USER role required");
+        }
         return currentUser.id();
     }
 
     public long requireTrainerId() {
         final CurrentUser currentUser = requireCurrentUser();
-        if (currentUser.type() != PersonType.TRAINER) throw new SecurityException("Trainer type/role required");
+        if (currentUser.type() != PersonType.TRAINER) {
+            throw new SecurityException("TRAINER role required");
+        }
         return currentUser.id();
     }
 }

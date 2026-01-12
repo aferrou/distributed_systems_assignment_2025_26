@@ -1,15 +1,24 @@
 package gr.hua.dit.fittrack.web.ui;
 
+import gr.hua.dit.fittrack.core.model.PersonType;
+import gr.hua.dit.fittrack.core.repository.PersonRepository;
 import gr.hua.dit.fittrack.core.security.CurrentUserProvider;
 import gr.hua.dit.fittrack.core.service.AppointmentBusinessLogicService;
-import gr.hua.dit.fittrack.core.service.model.*;
+import gr.hua.dit.fittrack.core.service.mapper.PersonMapper;
+import gr.hua.dit.fittrack.core.service.model.CompleteAppointmentRequest;
+import gr.hua.dit.fittrack.core.service.model.CreateAppointmentRequest;
+import gr.hua.dit.fittrack.core.service.model.ConfirmAppointmentRequest;
+import gr.hua.dit.fittrack.core.service.model.AppointmentView;
+import gr.hua.dit.fittrack.core.service.model.PersonView;
 
 import gr.hua.dit.fittrack.web.ui.model.CompleteAppointmentForm;
 import gr.hua.dit.fittrack.web.ui.model.CreateAppointmentForm;
 
 import jakarta.validation.Valid;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,10 +27,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.ZoneId;
+import java.util.Map;
+
 import java.util.List;
 
 /**
@@ -31,137 +43,176 @@ import java.util.List;
 @RequestMapping("/appointments")
 public class AppointmentController {
 
-    private final AppointmentBusinessLogicService appointmentBusinessLogicService;
+    private final AppointmentBusinessLogicService appointmentService;
     private final CurrentUserProvider currentUserProvider;
+    private final PersonRepository personRepository;
+    private final PersonMapper personMapper;
 
-    public AppointmentController(final AppointmentBusinessLogicService appointmentBusinessLogicService, final CurrentUserProvider currentUserProvider) {
-        if (appointmentBusinessLogicService == null) throw new NullPointerException();
+    public AppointmentController(
+            final AppointmentBusinessLogicService appointmentService,
+            final CurrentUserProvider currentUserProvider,
+            final PersonRepository personRepository,
+            final PersonMapper personMapper) {
+        if (appointmentService == null) throw new NullPointerException();
         if (currentUserProvider == null) throw new NullPointerException();
-
-        this.appointmentBusinessLogicService = appointmentBusinessLogicService;
+        if (personRepository == null) throw new NullPointerException();
+        if (personMapper == null) throw new NullPointerException();
+        this.appointmentService = appointmentService;
         this.currentUserProvider = currentUserProvider;
+        this.personRepository = personRepository;
+        this.personMapper = personMapper;
+    }
+
+    private List<PersonView> getTrainers() {
+        return personRepository
+                .findAllByTypeOrderByLastName(PersonType.TRAINER)
+                .stream()
+                .map(personMapper::convertPersonToPersonView)
+                .toList();
     }
 
     // List appointments
     // --------------------------------------------------
 
-    @GetMapping("")
+    @GetMapping
     public String list(final Model model) {
-        final List<AppointmentView> appointmentViewList = this.appointmentBusinessLogicService.getAppointments();
-        model.addAttribute("appointments", appointmentViewList);
+        final List<AppointmentView> appointments = appointmentService.getAppointments();
+        model.addAttribute("appointments", appointments);
         return "appointments";
     }
 
     // Appointment details
     // --------------------------------------------------
 
-    @GetMapping("/{appointmentId}")
-    public String detail(@PathVariable final Long appointmentId, final Model model) {
-        final AppointmentView appointmentView = this.appointmentBusinessLogicService.getAppointment(appointmentId).orElse(null);
-        if (appointmentId == null) {
-            throw new ResponseStatusException(HttpStatusCode.valueOf(404), "Appointment not found");
-        }
-        final CompleteAppointmentForm completeAppointmentForm = new CompleteAppointmentForm("");
-        model.addAttribute("appointment", appointmentView);
-        model.addAttribute("completeAppointmentForm", completeAppointmentForm);
+    @GetMapping("/{id}")
+    public String detail(@PathVariable final Long id, final Model model) {
+
+        final AppointmentView appointment = appointmentService
+                .getAppointment(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Appointment not found"));
+
+        model.addAttribute("appointment", appointment);
+        model.addAttribute("completeForm", new CompleteAppointmentForm(""));
+
         return "appointment";
     }
 
-    // Create appointments
+    // Create appointment (USER's side)
     // --------------------------------------------------
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/new")
     public String showCreateForm(final Model model) {
-        // form initial data
-        final CreateAppointmentForm createAppointmentForm = new CreateAppointmentForm(null, null, "", null);
-        model.addAttribute("form", createAppointmentForm);
+        model.addAttribute("form", new CreateAppointmentForm(null, null, null, "", null, null));
+        model.addAttribute("trainers", getTrainers());
         return "new_appointment";
     }
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/new")
-    public String handleCreateForm(
-            @ModelAttribute("form") @Valid final CreateAppointmentForm createAppointmentForm,
-            final BindingResult bindingResult
+    @ResponseBody
+    public ResponseEntity<?> handleCreateForm(
+            @ModelAttribute("form") @Valid final CreateAppointmentForm form,
+            final BindingResult bindingResult,
+            @RequestHeader(value = "X-Requested-With", required = false) String requestedWith
     ) {
+        boolean isAjax = "XMLHttpRequest".equals(requestedWith);
+
         if (bindingResult.hasErrors()) {
-            return "new_appointment";
+            if (isAjax) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Παρακαλώ συμπληρώστε όλα τα πεδία"));
+            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/appointments/new")
+                    .build();
         }
-        final CreateAppointmentRequest createAppointmentRequest = new CreateAppointmentRequest(
-                this.currentUserProvider.requireUserId(), // The current user must be User. We need their ID.
-                createAppointmentForm.trainerId(),
-                createAppointmentForm.trainingType(),
-                createAppointmentForm.userNotes(),
-                createAppointmentForm.scheduledAt().atZone(ZoneId.systemDefault()).toInstant(),
-                null,
-                null
-        );
-        final AppointmentView appointmentView = this.appointmentBusinessLogicService.createAppointment(createAppointmentRequest);
-        return "redirect:/appointments/" + appointmentView.id();
+
+        try {
+            final CreateAppointmentRequest request =
+                    new CreateAppointmentRequest(
+                            this.currentUserProvider.requireUserId(),
+                            form.trainerId(),
+                            form.getTrainingTypeOrDefault(),
+                            form.userNotes() != null ? form.userNotes() : "",
+                            form.getScheduledAtAsInstant(),
+                            form.latitude(),
+                            form.longitude()
+                    );
+
+            final AppointmentView appointment =
+                    appointmentService.requestAppointment(request, true);
+
+            if (isAjax) {
+                return ResponseEntity.ok(Map.of("success", true, "message", "Το ραντεβού είναι σε αναμονή έγκρισης"));
+            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/appointments/" + appointment.id())
+                    .build();
+        } catch (IllegalStateException e) {
+            if (isAjax) {
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/appointments/new?error=" + e.getMessage())
+                    .build();
+        } catch (IllegalArgumentException e) {
+            if (isAjax) {
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/appointments/new?error=" + e.getMessage())
+                    .build();
+        }
     }
 
-    @PreAuthorize("hasRole('TRAINER')")
-    @PostMapping("/{appointmentId}/start")
-    public String handleStartForm(@PathVariable final Long appointmentId) {
-        final StartAppointmentRequest startAppointmentRequest = new StartAppointmentRequest(appointmentId);
-        final AppointmentView appointmentView = this.appointmentBusinessLogicService.startAppointment(startAppointmentRequest);
-        return "redirect:/appointments/" + appointmentView.id();
-    }
+    // Confirm appointment (TRAINER's side)
+    // --------------------------------------------------
 
     @PreAuthorize("hasRole('TRAINER')")
-    @PostMapping("/{appointmentId}/complete")
-    public String handleCompleteForm(
-            @PathVariable final Long appointmentId,
-            @ModelAttribute("form") final CompleteAppointmentForm completeAppointmentForm,
-            final BindingResult bindingResult
+    @PostMapping("/{id}/confirm")
+    @ResponseBody
+    public ResponseEntity<?> confirm(
+            @PathVariable final Long id,
+            @RequestHeader(value = "X-Requested-With", required = false) String requestedWith
+    ) {
+        boolean isAjax = "XMLHttpRequest".equals(requestedWith);
+
+        final AppointmentView appointment =
+                appointmentService.confirmAppointment(
+                        new ConfirmAppointmentRequest(id)
+                );
+
+        if (isAjax) {
+            return ResponseEntity.ok(Map.of("success", true, "status", "CONFIRMED"));
+        }
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", "/appointments/" + appointment.id())
+                .build();
+    }
+
+    @PostMapping("/{id}/complete")
+    public String complete(
+            @PathVariable final Long id,
+            @ModelAttribute("completeForm") @Valid final CompleteAppointmentForm form,
+            final BindingResult bindingResult,
+            final Model model
     ) {
         if (bindingResult.hasErrors()) {
+            // Need to reload the appointment for the view
+            final AppointmentView appointment = appointmentService
+                    .getAppointment(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Appointment not found"));
+            model.addAttribute("appointment", appointment);
             return "appointment";
         }
-        final CompleteAppointmentRequest completeAppointmentRequest = new CompleteAppointmentRequest(
-                appointmentId,
-                completeAppointmentForm.trainerNotes()
-        );
-        final AppointmentView appointmentView = this.appointmentBusinessLogicService.completeAppointment(completeAppointmentRequest);
-        return "redirect:/appointments/" + appointmentView.id();
-    }
 
-//    // Confirm appointment endpoint
-//    @PreAuthorize("hasRole('TRAINER')")
-//    @PostMapping("/{appointmentId}/confirm")
-//    public String handleConfirmForm(
-//            @PathVariable final Long appointmentId,
-//            @ModelAttribute("form") @Valid final ConfirmAppointmentForm confirmAppointmentForm,
-//            final BindingResult bindingResult
-//    ) {
-//        if (bindingResult.hasErrors()) {
-//            return "appointment"; // Return to appointment details page
-//        }
-//        final ConfirmAppointmentRequest confirmRequest = new ConfirmAppointmentRequest(
-//                appointmentId,
-//                confirmAppointmentForm.trainerNotes()
-//        );
-//        final AppointmentView appointmentView = this.appointmentBusinessLogicService.confirmAppointment(confirmRequest);
-//        return "redirect:/appointments/" + appointmentView.id();
-//    }
-//
-//    // Decline appointment endpoint
-//    @PreAuthorize("hasRole('TRAINER')")
-//    @PostMapping("/{appointmentId}/decline")
-//    public String handleDeclineForm(
-//            @PathVariable final Long appointmentId,
-//            @ModelAttribute("form") @Valid final DeclineAppointmentForm declineAppointmentForm,
-//            final BindingResult bindingResult
-//    ) {
-//        if (bindingResult.hasErrors()) {
-//            return "appointment"; // Return to appointment details page
-//        }
-//        final DeclineAppointmentRequest declineRequest = new DeclineAppointmentRequest(
-//                appointmentId,
-//                declineAppointmentForm.declineReason()
-//        );
-//        final AppointmentView appointmentView = this.appointmentBusinessLogicService.declineAppointment(declineRequest);
-//        return "redirect:/appointments/" + appointmentView.id();
-//    }
+        final AppointmentView appointment =
+                appointmentService.completeAppointment(
+                        new CompleteAppointmentRequest(id, form.trainerNotes())
+                );
+
+        return "redirect:/appointments/" + appointment.id();
+    }
 }

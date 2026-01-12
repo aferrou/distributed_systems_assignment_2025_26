@@ -2,10 +2,6 @@ package gr.hua.dit.fittrack.core.service.impl;
 
 import gr.hua.dit.fittrack.core.model.Person;
 import gr.hua.dit.fittrack.core.model.PersonType;
-//import gr.hua.dit.fittrack.core.port.LookupPort;
-import gr.hua.dit.fittrack.core.port.PhoneNumberPort;
-import gr.hua.dit.fittrack.core.port.SmsNotificationPort;
-import gr.hua.dit.fittrack.core.port.impl.dto.PhoneNumberValidationResult;
 import gr.hua.dit.fittrack.core.repository.PersonRepository;
 import gr.hua.dit.fittrack.core.service.PersonBusinessLogicService;
 import gr.hua.dit.fittrack.core.service.mapper.PersonMapper;
@@ -38,32 +34,36 @@ public class PersonBusinessLogicServiceImpl implements PersonBusinessLogicServic
     private final PasswordEncoder passwordEncoder;
     private final PersonRepository personRepository;
     private final PersonMapper personMapper;
-    private final PhoneNumberPort phoneNumberPort;
-//    private final LookupPort lookupPort;
-    private final SmsNotificationPort smsNotificationPort;
 
     public PersonBusinessLogicServiceImpl(final Validator validator,
                                           final PasswordEncoder passwordEncoder,
                                           final PersonRepository personRepository,
-                                          final PersonMapper personMapper,
-                                          final PhoneNumberPort phoneNumberPort,
-//                                          final LookupPort lookupPort,
-                                          final SmsNotificationPort smsNotificationPort) {
+                                          final PersonMapper personMapper) {
         if (validator == null) throw new NullPointerException();
         if (passwordEncoder == null) throw new NullPointerException();
         if (personRepository == null) throw new NullPointerException();
         if (personMapper == null) throw new NullPointerException();
-        if (phoneNumberPort == null) throw new NullPointerException();
-//        if (lookupPort == null) throw new NullPointerException();
-        if (smsNotificationPort == null) throw new NullPointerException();
 
         this.validator = validator;
         this.passwordEncoder = passwordEncoder;
         this.personRepository = personRepository;
         this.personMapper = personMapper;
-        this.phoneNumberPort = phoneNumberPort;
-//        this.lookupPort = lookupPort;
-        this.smsNotificationPort = smsNotificationPort;
+    }
+
+    @Transactional
+    @Override
+    public CreatePersonResult createTrainer(final CreatePersonRequest createPersonRequest, final boolean notify) {
+        if (createPersonRequest == null) throw new NullPointerException();
+
+        // SECURITY: Force TRAINER type
+        // --------------------------------------------------
+        if (createPersonRequest.type() != PersonType.TRAINER) {
+            return CreatePersonResult.fail("This method only creates TRAINER accounts");
+        }
+
+        // Reuse the existing createPerson logic
+        // --------------------------------------------------
+        return this.createPerson(createPersonRequest, notify);
     }
 
     @Transactional
@@ -96,8 +96,9 @@ public class PersonBusinessLogicServiceImpl implements PersonBusinessLogicServic
         final String firstName = createPersonRequest.firstName().strip();
         final String lastName = createPersonRequest.lastName().strip();
         final String emailAddress = createPersonRequest.emailAddress().strip();
-        String mobilePhoneNumber = createPersonRequest.mobilePhoneNumber().strip();
         final String rawPassword = createPersonRequest.rawPassword();
+        final String specialisation = createPersonRequest.specialisation();
+        final String trainArea = createPersonRequest.trainArea();
 
         // Basic email address validation.
         // --------------------------------------------------
@@ -108,39 +109,9 @@ public class PersonBusinessLogicServiceImpl implements PersonBusinessLogicServic
             return CreatePersonResult.fail("Email address is not valid");
         }
 
-        // Advanced mobile phone number validation.
-        // --------------------------------------------------
-
-        final PhoneNumberValidationResult phoneNumberValidationResult
-                = this.phoneNumberPort.validate(mobilePhoneNumber);
-        if (!phoneNumberValidationResult.isValidMobile()) {
-            return CreatePersonResult.fail("Mobile Phone Number is not valid");
-        }
-        mobilePhoneNumber = phoneNumberValidationResult.e164();
-
-        // --------------------------------------------------
-
-        if (this.personRepository.existsByUsernameIgnoreCase(username)) {
-            return CreatePersonResult.fail("HUA ID already registered");
-        }
-
         if (this.personRepository.existsByEmailAddressIgnoreCase(emailAddress)) {
             return CreatePersonResult.fail("Email Address already registered");
         }
-
-        if (this.personRepository.existsByMobilePhoneNumber(mobilePhoneNumber)) {
-            return CreatePersonResult.fail("Mobile Phone Number already registered");
-        }
-
-        // --------------------------------------------------
-
-//        final PersonType personType_lookup = this.lookupPort.lookup(username).orElse(null);
-//        if (personType_lookup == null) {
-//            return CreatePersonResult.fail("Invalid HUA ID");
-//        }
-//        if (personType_lookup != type) {
-//            return CreatePersonResult.fail("The provided person type does not match the actual one");
-//        }
 
         // --------------------------------------------------
 
@@ -156,9 +127,14 @@ public class PersonBusinessLogicServiceImpl implements PersonBusinessLogicServic
         person.setFirstName(firstName);
         person.setLastName(lastName);
         person.setEmailAddress(emailAddress);
-        person.setMobilePhoneNumber(mobilePhoneNumber);
         person.setPasswordHash(hashedPassword);
         person.setCreatedAt(null); // auto generated.
+
+        // Set trainer-specific fields
+        if (type == PersonType.TRAINER) {
+            person.setSpecialisation(specialisation);
+            person.setTrainArea(trainArea);
+        }
 
         // --------------------------------------------------
 
@@ -174,18 +150,6 @@ public class PersonBusinessLogicServiceImpl implements PersonBusinessLogicServic
         // --------------------------------------------------
 
         person = this.personRepository.save(person);
-
-        // --------------------------------------------------
-
-        if (notify) {
-            final String content = String.format(
-                    "You have successfully registered for the FitTrack application. " +
-                            "Use your email (%s) to log in.", emailAddress);
-            final boolean sent = this.smsNotificationPort.sendSms(mobilePhoneNumber, content);
-            if (!sent) {
-                LOGGER.warn("SMS send to {} failed!", mobilePhoneNumber);
-            }
-        }
 
         // Map `Person` to `PersonView`.
         // --------------------------------------------------

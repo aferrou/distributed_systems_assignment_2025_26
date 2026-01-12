@@ -16,7 +16,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 /**
  * Provides global error handling and custom error templates.
  */
-@ControllerAdvice(basePackages = "gr.hua.dit.officehours.web.ui")
+@ControllerAdvice(basePackages = "gr.hua.dit.fittrack.web.ui")
 @Order(2)
 public class GlobalErrorHandlerControllerAdvice {
 
@@ -32,15 +32,11 @@ public class GlobalErrorHandlerControllerAdvice {
         model.addAttribute("path", httpServletRequest.getRequestURI());
         if (exception instanceof NoResourceFoundException) {
             httpServletResponse.setStatus(404);
-            return "error/404";
         } else if (exception instanceof SecurityException) {
             httpServletResponse.setStatus(401);
         } else if (exception instanceof ResponseStatusException responseStatusException) {
-            if (responseStatusException.getStatusCode().value() == 404) {
-                httpServletResponse.setStatus(404);
-                return "error/404";
-            }
+            httpServletResponse.setStatus(responseStatusException.getStatusCode().value());
         }
-        return "error/error";
+        return "error";
     }
 }

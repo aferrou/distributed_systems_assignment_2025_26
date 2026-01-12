@@ -1,5 +1,6 @@
 package gr.hua.dit.fittrack.core.security;
 
+import gr.hua.dit.fittrack.core.model.PersonType;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,13 +13,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * JWT authentication filter.
@@ -35,57 +33,94 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
-    private void writeError(final HttpServletResponse response) throws IOException {
-        response.setStatus(401);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\": \"invalid_token\"}");
-    }
-
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         final String path = request.getServletPath();
+        // Skip filtering for public auth endpoints
         if (path.equals("/api/v1/auth/client-tokens")) return true;
+        if (path.equals("/api/v1/auth/login")) return true;
         return !path.startsWith("/api/v1");
     }
 
-    @SuppressWarnings("unchecked")
+    private void writeUnauthorized(final HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\":\"invalid_token\"}");
+    }
+
     @Override
     protected void doFilterInternal(final HttpServletRequest request,
                                     final HttpServletResponse response,
-                                    final FilterChain filterChain) throws ServletException, IOException {
-        final String authorizationHeader = request.getHeader("Authorization");
+                                    final FilterChain filterChain)
+            throws ServletException, IOException {
 
-        // No header or not Bearer? -> Let the request continue unauthenticated.
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        final String header = request.getHeader("Authorization");
+
+        if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String token = authorizationHeader.substring(7);
+        final String token = header.substring(7);
+
         try {
-            final Claims claims = this.jwtService.parse(token);
+            final Claims claims = jwtService.parse(token);
             final String subject = claims.getSubject();
-            final Collection<String> roles = (Collection<String>) claims.get("roles");
 
-            // Convert String to GrantedAuthority
-            final var authorities =
-                    roles == null
-                            ? List.<GrantedAuthority>of() // empty list
-                            : roles.stream().map(role ->
-                            new SimpleGrantedAuthority("ROLE_" + role)).toList();
+            // Check if this is a client token (subject starts with "client:")
+            if (subject != null && subject.startsWith("client:")) {
+                // Client token - extract roles from claims
+                @SuppressWarnings("unchecked")
+                final java.util.List<String> roles = claims.get("roles", java.util.List.class);
+                final java.util.List<GrantedAuthority> authorities;
+                if (roles != null) {
+                    authorities = roles.stream()
+                            .map(r -> (GrantedAuthority) new SimpleGrantedAuthority("ROLE_" + r))
+                            .toList();
+                } else {
+                    authorities = java.util.Collections.emptyList();
+                }
 
-            // Create User.
-            final User principal = new User(subject, "", authorities);
-            final UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(principal, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                final UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(subject, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                // Person token - extract personId and type
+                final Long personId = claims.get("personId", Long.class);
+                final String typeRaw = claims.get("type", String.class);
+
+                if (personId == null || typeRaw == null) {
+                    LOGGER.warn("JWT missing personId or type claims");
+                    writeUnauthorized(response);
+                    return;
+                }
+
+                final PersonType personType = PersonType.valueOf(typeRaw);
+
+                final ApplicationUserDetails userDetails =
+                        new ApplicationUserDetails(
+                                personId,
+                                subject,
+                                "", // password not needed for JWT auth
+                                personType
+                        );
+
+                final UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
         } catch (Exception ex) {
-            // Invalid Token or Internal error.
-            LOGGER.warn("JwtAuthenticationFilter failed", ex);
-            this.writeError(response);
-            return; // stop here, i.e, next filters are ignored.
+            LOGGER.warn("JWT authentication failed", ex);
+            writeUnauthorized(response);
+            return;
         }
 
-        filterChain.doFilter(request, response); // next filter.
+        filterChain.doFilter(request, response);
     }
 }

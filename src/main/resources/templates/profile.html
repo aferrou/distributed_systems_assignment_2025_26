@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Profile - FitTrack</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main>
+    <section>
+        <h2>My Profile</h2>
+
+        <div class="card">
+            <p><strong>Email:</strong> <span th:text="${user.emailAddress}"></span></p>
+            <p><strong>Name:</strong>
+                <span th:text="${user.firstName}"></span>
+                <span th:text="${user.lastName}"></span>
+            </p>
+            <p><strong>Username:</strong> <span th:text="${user.username}"></span></p>
+            <p><strong>Role:</strong>
+                <span class="badge" th:text="${user.type}"></span>
+            </p>
+        </div>
+
+        <div th:if="${#authorization.expression('hasRole(''TRAINER'')')}">
+            <a class="button" th:href="@{/trainer}">Go to Trainer Dashboard</a>
+        </div>
+
+        <div th:if="${#authorization.expression('hasRole(''USER'')')}">
+            <a class="button" th:href="@{/appointments/new}">Book New Appointment</a>
+            <a class="button" th:href="@{/appointments}">View My Appointments</a>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

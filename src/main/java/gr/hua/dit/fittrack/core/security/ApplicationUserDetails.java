@@ -15,42 +15,46 @@ import java.util.Collections;
 @SuppressWarnings("RedundantMethodOverride")
 public final class ApplicationUserDetails implements UserDetails {
 
-    private final long personId;
+    private final Long personId;
     private final String emailAddress;
     private final String passwordHash;
-    private final PersonType type;
+    private final PersonType personType;
 
-    public ApplicationUserDetails(final long personId,
-                                  final String emailAddress,
-                                  final String passwordHash,
-                                  final PersonType type) {
-        if (personId <= 0) throw new IllegalArgumentException();
-        if (emailAddress == null) throw new NullPointerException();
-        if (emailAddress.isBlank()) throw new IllegalArgumentException();
-        if (passwordHash == null) throw new NullPointerException();
-        if (passwordHash.isBlank()) throw new IllegalArgumentException();
-        if (type == null) throw new NullPointerException();
+    public ApplicationUserDetails(
+            final Long personId,
+            final String emailAddress,
+            final String passwordHash,
+            final PersonType personType
+    ) {
+        if (personId == null || personId <= 0) throw new IllegalArgumentException("personId must be positive");
+        if (emailAddress == null) throw new NullPointerException("emailAddress cannot be null");
+        if (emailAddress.isBlank()) throw new IllegalArgumentException("emailAddress cannot be blank");
+        if (passwordHash == null) throw new NullPointerException("passwordHash cannot be null");
+        // Note: passwordHash can be empty for JWT-authenticated requests
+        if (personType == null) throw new NullPointerException("personType cannot be null");
 
         this.personId = personId;
         this.emailAddress = emailAddress;
         this.passwordHash = passwordHash;
-        this.type = type;
+        this.personType = personType;
     }
 
-    public long personId() {
-        return this.personId;
+    // Domain-specific accessors
+    public Long getPersonId() {
+        return personId;
     }
 
-    public PersonType type() {
-        return this.type;
+    public PersonType getPersonType() {
+        return personType;
     }
 
+    // UserDetails implementation
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         final String role;
-        if (this.type == PersonType.TRAINER) role = "ROLE_TRAINER";
-        else if (this.type == PersonType.USER) role = "ROLE_USER";
-        else throw new RuntimeException("Invalid type: " + this.type);
+        if (this.personType == PersonType.TRAINER) role = "ROLE_TRAINER";
+        else if (this.personType == PersonType.USER) role = "ROLE_USER";
+        else throw new RuntimeException("Invalid type: " + this.personType);
         return Collections.singletonList(new SimpleGrantedAuthority(role));
     }
 

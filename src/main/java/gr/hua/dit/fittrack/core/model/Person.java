@@ -29,17 +29,15 @@ import java.time.Instant;
 @Table(
         name = "person",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_person_username", columnNames = "username"),
-                @UniqueConstraint(name = "uk_person_email_address", columnNames = "email_address"),
-                @UniqueConstraint(name = "uk_person_mobile_phone_number", columnNames = "mobile_phone_number")
+                @UniqueConstraint(name = "uk_person_email_address", columnNames = "email_address")
         },
         indexes = {
                 @Index(name = "idx_person_type", columnList = "type"),
                 @Index(name = "idx_person_last_name", columnList = "last_name")
         }
 )
+public final class Person {
 
-public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id")
@@ -47,8 +45,8 @@ public class Person {
 
     @NotNull
     @NotBlank
-    @Size(max = 20)
-    @Column(name = "username", nullable = false, length = 20)
+    @Size(max = 100)
+    @Column(name = "username", nullable = false, length = 100)
     private String username;
 
     @NotNull
@@ -62,12 +60,6 @@ public class Person {
     @Size(max = 100)
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
-
-    @NotNull
-    @NotBlank
-    @Size(max = 18)
-    @Column(name = "mobile_phone_number", nullable = false, length = 18)
-    private String mobilePhoneNumber; // E164
 
     @NotNull
     @NotBlank
@@ -87,6 +79,18 @@ public class Person {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @Size(max = 20)
+    @Column(name = "mobile_phone_number", length = 20)
+    private String mobilePhoneNumber;
+
+    @Size(max = 100)
+    @Column(name = "specialisation", length = 100)
+    private String specialisation;
+
+    @Size(max = 100)
+    @Column(name = "training_area", length = 100)
+    private String trainArea;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -98,19 +102,23 @@ public class Person {
                   String username,
                   String firstName,
                   String lastName,
-                  String mobilePhoneNumber,
                   String emailAddress,
                   PersonType type,
                   String passwordHash,
+                  String mobilePhoneNumber,
+                  String specialisation,
+                  String trainArea,
                   Instant createdAt) {
         this.id = id;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.mobilePhoneNumber = mobilePhoneNumber;
         this.emailAddress = emailAddress;
         this.type = type;
         this.passwordHash = passwordHash;
+        this.mobilePhoneNumber = mobilePhoneNumber;
+        this.specialisation = specialisation;
+        this.trainArea = trainArea;
         this.createdAt = createdAt;
     }
 
@@ -146,14 +154,6 @@ public class Person {
         this.lastName = lastName;
     }
 
-    public String getMobilePhoneNumber() {
-        return mobilePhoneNumber;
-    }
-
-    public void setMobilePhoneNumber(String mobilePhoneNumber) {
-        this.mobilePhoneNumber = mobilePhoneNumber;
-    }
-
     public String getEmailAddress() {
         return emailAddress;
     }
@@ -178,6 +178,30 @@ public class Person {
         this.passwordHash = passwordHash;
     }
 
+    public String getMobilePhoneNumber() {
+        return mobilePhoneNumber;
+    }
+
+    public void setMobilePhoneNumber(String mobilePhoneNumber) {
+        this.mobilePhoneNumber = mobilePhoneNumber;
+    }
+
+    public String getSpecialisation() {
+        return specialisation;
+    }
+
+    public void setSpecialisation(String specialisation) {
+        this.specialisation = specialisation;
+    }
+
+    public String getTrainArea() {
+        return trainArea;
+    }
+
+    public void setTrainArea(String trainArea) {
+        this.trainArea = trainArea;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -190,7 +214,7 @@ public class Person {
     public String toString() {
         return "Person{" +
                 "id=" + id +
-                ", username='" + username + '\'' +
+                ", username=" + username +
                 ", type=" + type +
                 '}';
     }

@@ -5,18 +5,15 @@ import gr.hua.dit.fittrack.core.service.PersonBusinessLogicService;
 import gr.hua.dit.fittrack.core.service.model.CreatePersonRequest;
 import gr.hua.dit.fittrack.core.service.model.CreatePersonResult;
 
-import jakarta.validation.Valid;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 /**
- * UI controller for managing user/trainer registration.
+ * UI controller for managing user registration.
  */
 @Controller
 public class RegistrationController {
@@ -37,7 +34,7 @@ public class RegistrationController {
             return "redirect:/profile";
         }
         // Initial data for the form.
-        final CreatePersonRequest createPersonRequest = new CreatePersonRequest(PersonType.USER, "", "", "", "", "", "");
+        final CreatePersonRequest createPersonRequest = new CreatePersonRequest(PersonType.USER, "", "", "", "", "", null, null);
         model.addAttribute("createPersonRequest", createPersonRequest);
         return "register";
     }
@@ -45,22 +42,19 @@ public class RegistrationController {
     @PostMapping("/register")
     public String handleFormSubmission(
             final Authentication authentication,
-            @Valid @ModelAttribute("createPersonRequest") final CreatePersonRequest createPersonRequest,
-            final BindingResult bindingResult, // IMPORTANT: BindingResult **MUST** come immediately after the @Valid argument!
+            @ModelAttribute("createPersonRequest") final CreatePersonRequest createPersonRequest,
             final Model model
     ) {
         if (AuthUtils.isAuthenticated(authentication)) {
             return "redirect:/profile"; // already logged in.
         }
-        if (bindingResult.hasErrors()) {
-            return "register";
-        }
+        // TODO Form validation + UI errors.
         final CreatePersonResult createPersonResult = this.personBusinessLogicService.createPerson(createPersonRequest);
-        if (createPersonResult.created()) {
+        if (createPersonResult.success()) {
             return "redirect:/login"; // registration successful - redirect to login form (not yet ready)
         }
         model.addAttribute("createPersonRequest", createPersonRequest); // Pass the same form data.
-        model.addAttribute("errorMessage", createPersonResult.reason()); // Show an error message!
+        model.addAttribute("errorMessage", createPersonResult.errorMessage()); // Show an error message!
         return "register";
     }
 }
