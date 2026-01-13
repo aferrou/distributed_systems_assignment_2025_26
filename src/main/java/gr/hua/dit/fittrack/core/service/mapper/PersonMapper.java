@@ -23,7 +23,8 @@ public class PersonMapper {
                 person.getEmailAddress(),
                 person.getType(),
                 person.getSpecialisation(),
-                person.getTrainArea()
+                person.getTrainArea(),
+                person.getWorkingDays()
         );
     }
 }

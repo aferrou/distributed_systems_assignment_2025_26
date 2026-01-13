@@ -60,7 +60,8 @@ public class AdminTrainerController {
                 form.email(),
                 form.rawPassword(),
                 null,  // specialisation - not provided in this form
-                null   // trainArea - not provided in this form
+                null,  // trainArea - not provided in this form
+                null   // workingDays - not provided in this form
         );
 
         final CreatePersonResult result = personService.createTrainer(request, true);

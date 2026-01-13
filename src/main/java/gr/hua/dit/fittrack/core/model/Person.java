@@ -91,6 +91,14 @@ public final class Person {
     @Column(name = "training_area", length = 100)
     private String trainArea;
 
+    /**
+     * Working days for trainers (comma-separated, 1=Monday, 7=Sunday).
+     * Example: "1,2,4,5" means Monday, Tuesday, Thursday, Friday.
+     */
+    @Size(max = 50)
+    @Column(name = "working_days", length = 50)
+    private String workingDays;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -108,6 +116,7 @@ public final class Person {
                   String mobilePhoneNumber,
                   String specialisation,
                   String trainArea,
+                  String workingDays,
                   Instant createdAt) {
         this.id = id;
         this.username = username;
@@ -119,6 +128,7 @@ public final class Person {
         this.mobilePhoneNumber = mobilePhoneNumber;
         this.specialisation = specialisation;
         this.trainArea = trainArea;
+        this.workingDays = workingDays;
         this.createdAt = createdAt;
     }
 
@@ -200,6 +210,14 @@ public final class Person {
 
     public void setTrainArea(String trainArea) {
         this.trainArea = trainArea;
+    }
+
+    public String getWorkingDays() {
+        return workingDays;
+    }
+
+    public void setWorkingDays(String workingDays) {
+        this.workingDays = workingDays;
     }
 
     public Instant getCreatedAt() {

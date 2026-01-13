@@ -49,7 +49,8 @@ public class AdminTrainerResource {
                 request.emailAddress(),
                 request.rawPassword(),
                 request.specialisation(),
-                request.trainArea()
+                request.trainArea(),
+                request.workingDays()
         );
 
         final CreatePersonResult result = personService.createTrainer(trainerRequest, true);

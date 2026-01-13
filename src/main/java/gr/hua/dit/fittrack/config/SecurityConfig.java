@@ -63,32 +63,39 @@ public class SecurityConfig {
                                        final CustomAuthenticationSuccessHandler successHandler) throws Exception {
         http
                 .securityMatcher("/**")
-                // Το αφήνουμε ως σχόλιο προσωρινά... TODO configure.
-                // .csrf(csrf -> csrf.ignoringRequestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-                        .requestMatchers("/", "/login", "/register", "/guest").permitAll() // Public
-                        .requestMatchers("/profile", "/profile/**", "/trainer", "/trainer/**", "/availability", "/availability/**", "/logout").authenticated() // Private
-                        .anyRequest().permitAll() // the rest
+                        .requestMatchers("/", "/login", "/register", "/guest").permitAll()
+                        .requestMatchers("/profile", "/profile/**", "/trainer", "/trainer/**",
+                                "/availability", "/availability/**", "/logout").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login") // custom login page (see login.html)
-                        .loginProcessingUrl("/login") // POST request target (handled by Spring Security)
-                        .successHandler(successHandler) // Custom redirect based on user type
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .successHandler(successHandler)
                         .failureUrl("/login?error")
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/logout") // POST request target (handled by Spring Security)
-                        .logoutSuccessUrl("/") // Redirect to homepage after logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        // ή /login?logout αν θες
                         .deleteCookies("JSESSIONID")
                         .invalidateHttpSession(true)
+                        .clearAuthentication(true)
                         .permitAll()
+                )
+
+                //  ΑΥΤΟ ΛΥΝΕΙ ΤΟ ΠΡΟΒΛΗΜΑ ΜΕ ΤΟ BACK BUTTON
+                .headers(headers -> headers
+                        .cacheControl(cache -> {})
                 )
                 .httpBasic(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
