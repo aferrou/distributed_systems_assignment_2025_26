@@ -4,9 +4,15 @@
     <meta charset="UTF-8" />
     <title>FitTrack - User Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         body { background-color: #f8f9fa; }
         .card { border: 1px solid #dee2e6; }
+        /* Style for disabled dates in flatpickr */
+        .flatpickr-day.flatpickr-disabled {
+            color: rgba(57,57,57,0.3) !important;
+        }
     </style>
 </head>
 <body>
@@ -47,10 +53,18 @@
                                     </option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Ημερομηνία & Ώρα</label>
-                                <input type="datetime-local" id="scheduledAt" name="scheduledAt" class="form-control" required />
+                            <div class="row">
+                                <div class="col-md-7 mb-3">
+                                    <label class="form-label">Ημερομηνία</label>
+                                    <input type="text" id="scheduledDate" class="form-control" placeholder="Επιλέξτε ημερομηνία..." required />
+                                    <small class="text-muted">Οι γκρίζες ημερομηνίες δεν είναι διαθέσιμες</small>
+                                </div>
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label">Ώρα (09:00-21:00)</label>
+                                    <input type="text" id="scheduledTime" class="form-control" placeholder="Επιλέξτε ώρα" required readonly />
+                                </div>
                             </div>
+                            <input type="hidden" id="scheduledAt" name="scheduledAt" />
 
                             <!-- Outdoor Training Location Fields -->
                             <div id="locationFields" style="display: none;">
@@ -250,21 +264,84 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Set min datetime to now (prevent past dates)
-        const scheduledAtInput = document.getElementById('scheduledAt');
-        if (scheduledAtInput) {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            scheduledAtInput.min = `${year}-${month}-${day}T${hours}:${minutes}`;
+        // Working days management
+        let trainerWorkingDays = []; // Will be populated when trainer is selected
+        let flatpickrInstance = null; // Store flatpickr instance
+
+        const scheduledDateInput = document.getElementById('scheduledDate');
+        const scheduledTimeInput = document.getElementById('scheduledTime');
+        const scheduledAtHidden = document.getElementById('scheduledAt');
+
+        // Initialize Flatpickr
+        if (scheduledDateInput) {
+            flatpickrInstance = flatpickr(scheduledDateInput, {
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                locale: {
+                    firstDayOfWeek: 1, // Monday
+                    weekdays: {
+                        shorthand: ['Κυ', 'Δε', 'Τρ', 'Τε', 'Πε', 'Πα', 'Σα'],
+                        longhand: ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο']
+                    },
+                    months: {
+                        shorthand: ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιούν', 'Ιούλ', 'Αύγ', 'Σεπ', 'Οκτ', 'Νοέ', 'Δεκ'],
+                        longhand: ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος']
+                    }
+                },
+                disable: [
+                    function(date) {
+                        // Disable dates based on trainer's working days
+                        if (trainerWorkingDays.length === 0) {
+                            return false; // Don't disable anything if no trainer selected
+                        }
+
+                        const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+                        const isoDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek; // Convert to ISO (1=Monday, 7=Sunday)
+
+                        // Return true to DISABLE the date (if it's NOT in working days)
+                        return !trainerWorkingDays.includes(isoDayOfWeek);
+                    }
+                ],
+                onChange: function(selectedDates, dateStr, instance) {
+                    updateHiddenDateTime();
+                }
+            });
         }
 
-        // Show/hide location fields for outdoor training
+        // Time picker with Flatpickr (only hours from 09:00 to 21:00)
+        if (scheduledTimeInput) {
+            flatpickr(scheduledTimeInput, {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                minTime: "09:00",
+                maxTime: "21:00",
+                minuteIncrement: 60, // Only show full hours
+                defaultHour: 9,
+                onChange: function(selectedDates, dateStr, instance) {
+                    updateHiddenDateTime();
+                }
+            });
+        }
+
+        // Combine date + time into hidden datetime field
+        function updateHiddenDateTime() {
+            const date = scheduledDateInput.value;
+            const time = scheduledTimeInput.value;
+
+            if (date && time) {
+                scheduledAtHidden.value = `${date}T${time}`;
+            } else {
+                scheduledAtHidden.value = '';
+            }
+        }
+
+        // Show/hide location fields for outdoor training & load working days
         const trainerSelect = document.getElementById('trainerSelect');
         const locationFields = document.getElementById('locationFields');
         const hiddenLatitude = document.getElementById('hiddenLatitude');
@@ -274,16 +351,42 @@
             trainerSelect.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
                 const specialisation = selectedOption.dataset.specialisation;
+                const trainerId = this.value;
 
+                // Reset working days
+                trainerWorkingDays = [];
+                if (flatpickrInstance) {
+                    flatpickrInstance.clear(); // Clear selected date
+                }
+
+                // Fetch trainer's working days
+                if (trainerId) {
+                    fetch(`/api/trainers/${trainerId}/working-days`)
+                        .then(response => response.json())
+                        .then(data => {
+                            trainerWorkingDays = data;
+                            console.log('Trainer working days:', trainerWorkingDays);
+
+                            // Update Flatpickr to reflect new working days
+                            if (flatpickrInstance) {
+                                flatpickrInstance.redraw(); // Redraw calendar with new disabled dates
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching working days:', error);
+                        });
+                }
+
+                // Handle outdoor location fields
                 if (specialisation && specialisation.includes('Outdoor')) {
                     locationFields.style.display = 'block';
                 } else {
                     locationFields.style.display = 'none';
                     // Clear location when not outdoor
-                    const postalCodeInput = document.getElementById('postalCodeInput');
-                    const postalCodeFeedback = document.getElementById('postalCodeFeedback');
-                    if (postalCodeInput) postalCodeInput.value = '';
-                    if (postalCodeFeedback) postalCodeFeedback.textContent = '';
+                    const locationInput = document.getElementById('locationInput');
+                    const locationFeedback = document.getElementById('locationFeedback');
+                    if (locationInput) locationInput.value = '';
+                    if (locationFeedback) locationFeedback.textContent = '';
                     if (hiddenLatitude) hiddenLatitude.value = '';
                     if (hiddenLongitude) hiddenLongitude.value = '';
                 }
@@ -500,5 +603,32 @@
         });
     });
 </script>
+<form id="autoLogoutForm" th:action="@{/logout}" method="post" style="display:none;">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+</form>
+<script>
+    (function () {
+        function isBackForward() {
+            const nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+            return nav && nav.type === "back_forward";
+        }
+
+        function logoutNow() {
+            const f = document.getElementById("autoLogoutForm");
+            if (f) f.submit();
+            else window.location.replace("/login");
+        }
+
+        window.addEventListener("pageshow", function (e) {
+            if (e.persisted || isBackForward()) {
+                logoutNow();
+            }
+        });
+
+        // μειώνει BFCache σε κάποιους browsers
+        window.addEventListener("unload", function(){});
+    })();
+</script>
+
 </body>
 </html>

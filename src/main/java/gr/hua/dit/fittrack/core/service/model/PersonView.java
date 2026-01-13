@@ -17,7 +17,8 @@ public record PersonView(
         String emailAddress,
         PersonType type,
         String specialisation,
-        String trainArea
+        String trainArea,
+        String workingDays // comma-separated: 1=Monday, 7=Sunday
 ) {
 
     public String fullName() {

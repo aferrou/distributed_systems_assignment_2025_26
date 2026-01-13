@@ -123,15 +123,17 @@ public class InitializationService {
 
         final List<CreatePersonRequest> createPersonRequestList = List.of(
                 // Trainers - Greek trainers with specializations
+                // Working days: 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday
                 new CreatePersonRequest(
                         PersonType.TRAINER,
                         "giannis.papadopoulos",
                         "Γιάννης",
                         "Παπαδόπουλος",
                         "giannis.papadopoulos@fittrack.gr",
-                        "trainer123",
+                        "trainer123T!",
                         "Προπόνηση Δύναμης",
-                        "Αθήνα"
+                        "Αθήνα",
+                        "1,2,4,5" // Monday, Tuesday, Thursday, Friday
                 ),
                 new CreatePersonRequest(
                         PersonType.TRAINER,
@@ -139,9 +141,10 @@ public class InitializationService {
                         "Μαρία",
                         "Κωνσταντίνου",
                         "maria.konstantinou@fittrack.gr",
-                        "trainer123",
+                        "trainer123T!",
                         "Yoga & Pilates",
-                        "Θεσσαλονίκη"
+                        "Θεσσαλονίκη",
+                        "1,3,4,6" // Monday, Wednesday, Thursday, Saturday
                 ),
                 new CreatePersonRequest(
                         PersonType.TRAINER,
@@ -149,9 +152,10 @@ public class InitializationService {
                         "Νίκος",
                         "Αθανασίου",
                         "nikos.athanassiou@fittrack.gr",
-                        "trainer123",
+                        "trainer123T!",
                         "Crossfit & Outdoor Training",
-                        "Πάτρα"
+                        "Πάτρα",
+                        "2,3,5,6" // Tuesday, Wednesday, Friday, Saturday
                 ),
                 new CreatePersonRequest(
                         PersonType.TRAINER,
@@ -159,9 +163,10 @@ public class InitializationService {
                         "Ελένη",
                         "Δημητρίου",
                         "eleni.dimitriou@fittrack.gr",
-                        "trainer123",
+                        "trainer123T!",
                         "Functional & Outdoor Training",
-                        "Αθήνα"
+                        "Αθήνα",
+                        "1,2,4,6" // Monday, Tuesday, Thursday, Saturday
                 ),
                 new CreatePersonRequest(
                         PersonType.TRAINER,
@@ -169,9 +174,10 @@ public class InitializationService {
                         "Κώστας",
                         "Γεωργίου",
                         "kostas.georgiou@fittrack.gr",
-                        "trainer123",
+                        "trainer123T!",
                         "Bodybuilding",
-                        "Ηράκλειο"
+                        "Ηράκλειο",
+                        "3,4,5,6" // Wednesday, Thursday, Friday, Saturday
                 ),
                 new CreatePersonRequest(
                         PersonType.TRAINER,
@@ -179,9 +185,10 @@ public class InitializationService {
                         "Σοφία",
                         "Παναγιώτου",
                         "sofia.panagioutou@fittrack.gr",
-                        "trainer123",
+                        "trainer123T!",
                         "Cardio & Outdoor Training",
-                        "Θεσσαλονίκη"
+                        "Θεσσαλονίκη",
+                        "1,2,3,4" // Monday, Tuesday, Wednesday, Thursday
                 ),
                 // Users
                 new CreatePersonRequest(
@@ -190,9 +197,10 @@ public class InitializationService {
                         "Γιώργος",
                         "Καραγιάννης",
                         "giorgos.karagiannis@email.gr",
-                        "user123",
+                        "user123U!",
                         null,
-                        null
+                        null,
+                        null // users don't have working days
                 ),
                 new CreatePersonRequest(
                         PersonType.USER,
@@ -200,9 +208,10 @@ public class InitializationService {
                         "Κατερίνα",
                         "Παπαδοπούλου",
                         "katerina.papadopoulou@email.gr",
-                        "user123",
+                        "user123U!",
                         null,
-                        null
+                        null,
+                        null // users don't have working days
                 ),
                 new CreatePersonRequest(
                         PersonType.USER,
@@ -210,10 +219,22 @@ public class InitializationService {
                         "Δημήτρης",
                         "Νικολάου",
                         "dimitris.nikolaou@email.gr",
-                        "user123",
+                        "user123U!",
                         null,
-                        null
-                )
+                        null,
+                        null // users don't have working days
+                ),
+            new CreatePersonRequest(
+                    PersonType.USER,
+                    "test",
+                    "t",
+                    "t",
+                    "t@t.gr",
+                    "user123U!",
+                    null,
+                    null,
+                    null // users don't have working days
+            )
         );
 
         int successCount = 0;

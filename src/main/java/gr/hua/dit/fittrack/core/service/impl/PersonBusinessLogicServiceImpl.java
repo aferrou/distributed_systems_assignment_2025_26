@@ -99,18 +99,40 @@ public class PersonBusinessLogicServiceImpl implements PersonBusinessLogicServic
         final String rawPassword = createPersonRequest.rawPassword();
         final String specialisation = createPersonRequest.specialisation();
         final String trainArea = createPersonRequest.trainArea();
+        final String workingDays = createPersonRequest.workingDays();
+
+        // Basic username validation.
+        // --------------------------------------------------
+
+        if (this.personRepository.existsByUsernameIgnoreCase(username)) {
+            return CreatePersonResult.fail("Username" + username + "already exists");
+        }
 
         // Basic email address validation.
         // --------------------------------------------------
 
         final Pattern VALID_EMAIL_ADDRESS_REGEX = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailAddress);
-        if (!matcher.matches()) {
+        Matcher emailMatcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailAddress);
+        if (!emailMatcher.matches()) {
             return CreatePersonResult.fail("Email address is not valid");
         }
 
         if (this.personRepository.existsByEmailAddressIgnoreCase(emailAddress)) {
             return CreatePersonResult.fail("Email Address already registered");
+        }
+
+        // Basic password validation.
+        // --------------------------------------------------
+
+        final Pattern VALID_PASSWORD_REGEX = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&-+=()])(?=\\S+$).{6,100}$");
+        Matcher passwordMatcher = VALID_PASSWORD_REGEX.matcher(rawPassword);
+
+        if (rawPassword.length() < 6) {
+            return CreatePersonResult.fail("Password should be at least 6 characters long");
+        }
+
+        if (!passwordMatcher.matches()) {
+            return CreatePersonResult.fail("Password doesn't meet the requirements.");
         }
 
         // --------------------------------------------------
@@ -134,6 +156,7 @@ public class PersonBusinessLogicServiceImpl implements PersonBusinessLogicServic
         if (type == PersonType.TRAINER) {
             person.setSpecialisation(specialisation);
             person.setTrainArea(trainArea);
+            person.setWorkingDays(workingDays);
         }
 
         // --------------------------------------------------
