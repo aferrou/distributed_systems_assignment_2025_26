@@ -95,26 +95,6 @@ public class InitializationService {
         LOGGER.info("Created {} OAuth2 clients", clientList.size());
     }
 
-//    private void initializeAdmin() {
-//        if (personRepository.existsByUsernameIgnoreCase("admin")) {
-//            LOGGER.info("Admin account already exists, skipping admin initialization.");
-//            return;
-//        }
-//
-//        // Create admin directly via repository to bypass security checks
-//        final var admin = new gr.hua.dit.fittrack.core.model.Person();
-//        admin.setUsername("admin");
-//        admin.setType(PersonType.ADMIN);
-//        admin.setFirstName("System");
-//        admin.setLastName("Administrator");
-//        admin.setEmailAddress("admin@fittrack.com");
-//        admin.setMobilePhoneNumber("+306900000000");
-//        admin.setPasswordHash(passwordEncoder.encode("admin123"));
-//
-//        personRepository.save(admin);
-//        LOGGER.info("✅ Created admin account: username=admin, password=admin123");
-//    }
-
     private void initializeTestAccounts() {
         if (personRepository.count() > 0) {
             LOGGER.info("Test accounts already exist, skipping test account initialization.");
@@ -223,18 +203,7 @@ public class InitializationService {
                         null,
                         null,
                         null // users don't have working days
-                ),
-            new CreatePersonRequest(
-                    PersonType.USER,
-                    "test",
-                    "t",
-                    "t",
-                    "t@t.gr",
-                    "user123U!",
-                    null,
-                    null,
-                    null // users don't have working days
-            )
+                )
         );
 
         int successCount = 0;
