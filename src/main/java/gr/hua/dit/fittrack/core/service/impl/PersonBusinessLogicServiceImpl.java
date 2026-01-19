@@ -117,6 +117,11 @@ public class PersonBusinessLogicServiceImpl implements PersonBusinessLogicServic
             return CreatePersonResult.fail("Email address is not valid");
         }
 
+        // Trainer-specific email validation
+        if (type == PersonType.TRAINER && !emailAddress.toLowerCase().endsWith("@fittrack.gr")) {
+            return CreatePersonResult.fail("Trainer email must end with @fittrack.gr");
+        }
+
         if (this.personRepository.existsByEmailAddressIgnoreCase(emailAddress)) {
             return CreatePersonResult.fail("Email Address already registered");
         }

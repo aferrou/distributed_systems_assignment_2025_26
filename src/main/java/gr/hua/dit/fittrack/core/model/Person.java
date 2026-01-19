@@ -79,10 +79,6 @@ public final class Person {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    @Size(max = 20)
-    @Column(name = "mobile_phone_number", length = 20)
-    private String mobilePhoneNumber;
-
     @Size(max = 100)
     @Column(name = "specialisation", length = 100)
     private String specialisation;
@@ -113,7 +109,6 @@ public final class Person {
                   String emailAddress,
                   PersonType type,
                   String passwordHash,
-                  String mobilePhoneNumber,
                   String specialisation,
                   String trainArea,
                   String workingDays,
@@ -125,7 +120,6 @@ public final class Person {
         this.emailAddress = emailAddress;
         this.type = type;
         this.passwordHash = passwordHash;
-        this.mobilePhoneNumber = mobilePhoneNumber;
         this.specialisation = specialisation;
         this.trainArea = trainArea;
         this.workingDays = workingDays;
@@ -186,14 +180,6 @@ public final class Person {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
-    }
-
-    public String getMobilePhoneNumber() {
-        return mobilePhoneNumber;
-    }
-
-    public void setMobilePhoneNumber(String mobilePhoneNumber) {
-        this.mobilePhoneNumber = mobilePhoneNumber;
     }
 
     public String getSpecialisation() {
