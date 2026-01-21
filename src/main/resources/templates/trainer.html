@@ -76,7 +76,6 @@
     </div>
 
     <div id="calendar"></div>
-    <button id="save-availability" class="btn btn-dark mt-3">Αποθήκευση Διαθεσιμότητας</button>
   </section>
 
   <!-- Appointments Section -->
@@ -88,7 +87,7 @@
     </div>
 
     <div class="list-group" th:if="${not #lists.isEmpty(appointments)}">
-      <div class="list-group-item" th:each="appointment : ${appointments}">
+      <div class="list-group-item" th:each="appointment : ${appointments}" th:if="${appointment.status.name() != 'CANCELLED'}">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <strong th:text="${appointment.user.firstName + ' ' + appointment.user.lastName}">User</strong>
@@ -113,6 +112,11 @@
                   th:id="'confirm-msg-' + ${appointment.id}"
                   class="text-success small ms-2"
                   style="display: none;">✓</span>
+            <button th:if="${appointment.status.name() == 'REQUESTED' or appointment.status.name() == 'CONFIRMED'}"
+                    type="button"
+                    class="btn btn-outline-danger btn-sm cancel-btn ms-2"
+                    th:data-id="${appointment.id}"
+                    th:data-csrf="${_csrf.token}">Ακύρωση</button>
           </div>
         </div>
       </div>
@@ -201,9 +205,9 @@
             ? trainerWorkingDays.split(',').map(d => parseInt(d.trim()))
             : [1,2,3,4,5]; // Default: Mon-Fri
 
-    // Convert appointments to calendar events
+    // Convert appointments to calendar events (exclude CANCELLED appointments)
     const appointmentEvents = (appointmentsData || [])
-            .filter(a => a.scheduledAt != null)
+            .filter(a => a.scheduledAt != null && a.status !== 'CANCELLED')
             .map(a => ({
               id: 'appt-' + a.id,
               title: a.user.firstName + ' ' + a.user.lastName,
@@ -338,6 +342,41 @@
                 })
                 .catch(err => {
                   alert('Σφάλμα κατά την αποδοχή');
+                });
+      });
+    });
+
+    // AJAX cancel appointment
+    document.querySelectorAll('.cancel-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.dataset.id;
+        const csrf = this.dataset.csrf;
+
+        if (!confirm('Είστε σίγουροι ότι θέλετε να ακυρώσετε αυτό το ραντεβού;')) {
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('_csrf', csrf);
+
+        fetch('/appointments/' + id + '/cancel', {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+        })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    // Reload page to show updated status
+                    location.reload();
+                  } else {
+                    alert('Σφάλμα: ' + (data.error || 'Δεν ήταν δυνατή η ακύρωση'));
+                  }
+                })
+                .catch(err => {
+                  alert('Σφάλμα κατά την ακύρωση');
                 });
       });
     });

@@ -346,4 +346,42 @@ public class AppointmentBusinessLogicServiceImpl implements AppointmentBusinessL
 
         return appointmentView;
     }
+
+    @Transactional
+    @Override
+    public AppointmentView cancelAppointment(final Long appointmentId) {
+        if (appointmentId == null) throw new NullPointerException("Appointment id cannot be null");
+        if (appointmentId <= 0) throw new IllegalArgumentException("Appointment id must be positive");
+
+        // --------------------------------------------------
+        final Appointment appointment = this.appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Appointment does not exist"));
+
+        // Security - both user and trainer can cancel
+        // --------------------------------------------------
+        final CurrentUser currentUser = this.currentUserProvider.requireCurrentUser();
+        final long userId = appointment.getUser().getId();
+        final long trainerId = appointment.getTrainer().getId();
+
+        if (currentUser.id() != userId && currentUser.id() != trainerId) {
+            throw new SecurityException("Only the user or trainer of this appointment can cancel it");
+        }
+
+        // Rules
+        // --------------------------------------------------
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new IllegalArgumentException("Appointment is already cancelled");
+        }
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new IllegalArgumentException("Cannot cancel a completed appointment");
+        }
+
+        // --------------------------------------------------
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+
+        final Appointment savedAppointment = this.appointmentRepository.save(appointment);
+        final AppointmentView appointmentView = this.appointmentMapper.convertAppointmentToAppointmentView(savedAppointment);
+
+        return appointmentView;
+    }
 }

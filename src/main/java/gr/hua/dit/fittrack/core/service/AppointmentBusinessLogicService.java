@@ -31,4 +31,6 @@ public interface AppointmentBusinessLogicService {
 
     AppointmentView completeAppointment(final CompleteAppointmentRequest completeAppointmentRequest);
 
+    AppointmentView cancelAppointment(final Long appointmentId);
+
 }
