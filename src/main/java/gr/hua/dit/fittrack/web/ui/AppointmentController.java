@@ -17,7 +17,6 @@ import gr.hua.dit.fittrack.web.ui.model.CreateAppointmentForm;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -214,5 +213,35 @@ public class AppointmentController {
                 );
 
         return "redirect:/appointments/" + appointment.id();
+    }
+
+    // Cancel appointment (USER or TRAINER)
+    // --------------------------------------------------
+
+    @PostMapping("/{id}/cancel")
+    @ResponseBody
+    public ResponseEntity<?> cancel(
+            @PathVariable final Long id,
+            @RequestHeader(value = "X-Requested-With", required = false) String requestedWith
+    ) {
+        boolean isAjax = "XMLHttpRequest".equals(requestedWith);
+
+        try {
+            final AppointmentView appointment = appointmentService.cancelAppointment(id);
+
+            if (isAjax) {
+                return ResponseEntity.ok(Map.of("success", true, "status", "CANCELLED"));
+            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/appointments/" + appointment.id())
+                    .build();
+        } catch (IllegalArgumentException | SecurityException e) {
+            if (isAjax) {
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/appointments")
+                    .build();
+        }
     }
 }

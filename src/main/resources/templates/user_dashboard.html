@@ -99,7 +99,7 @@
                     <div class="col-md-7">
                         <h6>Τα Ραντεβού μου</h6>
                         <div th:if="${appointments != null and !appointments.isEmpty()}">
-                            <div th:each="appt : ${appointments}" class="border rounded p-2 mb-2">
+                            <div th:each="appt : ${appointments}" th:if="${appt.status.name() != 'CANCELLED'}" class="border rounded p-2 mb-2">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="flex-grow-1">
                                         <strong th:text="${appt.trainer.firstName + ' ' + appt.trainer.lastName}">Trainer</strong>
@@ -123,6 +123,13 @@
                                                 th:data-appointment-id="${appt.id}"
                                                 title="Προβολή Καιρού">
                                             ☀️ Καιρός
+                                        </button>
+                                        <button th:if="${appt.status.name() == 'REQUESTED' or appt.status.name() == 'CONFIRMED'}"
+                                                class="btn btn-sm btn-outline-danger cancel-btn"
+                                                th:data-appointment-id="${appt.id}"
+                                                th:data-csrf="${_csrf.token}"
+                                                title="Ακύρωση Ραντεβού">
+                                            Ακύρωση
                                         </button>
                                     </div>
                                 </div>
@@ -165,6 +172,8 @@
                                 </select>
                                 <button type="submit" class="btn btn-dark btn-sm">Προσθήκη</button>
                             </div>
+                            <div th:if="${goalError}" class="alert alert-danger alert-sm mt-2 mb-0" th:text="${goalError}"></div>
+                            <div th:if="${goalMessage}" class="alert alert-success alert-sm mt-2 mb-0" th:text="${goalMessage}"></div>
                         </form>
                     </div>
                 </div>
@@ -187,13 +196,13 @@
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">Βάρος (kg)</label>
-                                    <input type="number" step="0.1" class="form-control form-control-sm" name="weight" />
+                                    <input type="number" step="0.1" min="0" class="form-control form-control-sm" name="weight" />
                                 </div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col-6">
                                     <label class="form-label">Διάρκεια Προπόνησης (λεπτά)</label>
-                                    <input type="number" class="form-control form-control-sm" name="workoutDuration" />
+                                    <input type="number" min="0" class="form-control form-control-sm" name="workoutDuration" />
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">Είδος Άσκησης</label>
@@ -312,7 +321,7 @@
             });
         }
 
-        // Time picker with Flatpickr (only hours from 09:00 to 21:00)
+        // Time picker with Flatpickr (hours from 09:00 to 21:00, with 30-minute increments)
         if (scheduledTimeInput) {
             flatpickr(scheduledTimeInput, {
                 enableTime: true,
@@ -321,8 +330,9 @@
                 time_24hr: true,
                 minTime: "09:00",
                 maxTime: "21:00",
-                minuteIncrement: 60, // Only show full hours
+                minuteIncrement: 30, // 30-minute increments
                 defaultHour: 9,
+                defaultMinute: 0,
                 onChange: function(selectedDates, dateStr, instance) {
                     updateHiddenDateTime();
                 }
@@ -508,6 +518,42 @@
                     });
             });
         }
+
+        // Cancel appointment handlers
+        const cancelButtons = document.querySelectorAll('.cancel-btn');
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const appointmentId = this.dataset.appointmentId;
+                const csrf = this.dataset.csrf;
+
+                if (!confirm('Είστε σίγουροι ότι θέλετε να ακυρώσετε αυτό το ραντεβού;')) {
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('_csrf', csrf);
+
+                fetch('/appointments/' + appointmentId + '/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload page to show updated status
+                            location.reload();
+                        } else {
+                            alert('Σφάλμα: ' + (data.error || 'Δεν ήταν δυνατή η ακύρωση'));
+                        }
+                    })
+                    .catch(err => {
+                        alert('Σφάλμα κατά την ακύρωση');
+                    });
+            });
+        });
 
         // Weather button handlers
         const weatherButtons = document.querySelectorAll('.weather-btn');

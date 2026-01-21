@@ -94,6 +94,12 @@ public class ProfileController {
                           RedirectAttributes redirectAttributes) {
         final CurrentUser currentUser = currentUserProvider.requireCurrentUser();
 
+        // Check if goal already exists for this user
+        if (goalRepository.existsByUserIdAndGoalName(currentUser.id(), goalName)) {
+            redirectAttributes.addFlashAttribute("goalError", "Αυτός ο στόχος υπάρχει ήδη!");
+            return "redirect:/profile";
+        }
+
         Goal goal = new Goal(currentUser.id(), goalName);
         goalRepository.save(goal);
 
